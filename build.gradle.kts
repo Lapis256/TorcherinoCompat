@@ -124,8 +124,8 @@ dependencies {
         classifier("processor")
     })
     libs.mixinExtrasCommon.let {
-        compileOnly(it)
         annotationProcessor(it)
+        compileOnly(it)
     }
     libs.mixinExtrasForge.let {
         jarJar(it) {
