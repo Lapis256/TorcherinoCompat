@@ -4,7 +4,7 @@ object Constants {
         const val name = "Torcherino Compat"
         const val description = "Torcherino More Compatibility!!!!"
         const val license = "MIT"
-        const val version = "1.2.0"
+        const val version = "1.2.1"
         const val group = "io.github.lapis256"
         const val author = "Lapis256"
         const val repositoryUrl = "https://github.com/Lapis256/TorcherinoCompat"
