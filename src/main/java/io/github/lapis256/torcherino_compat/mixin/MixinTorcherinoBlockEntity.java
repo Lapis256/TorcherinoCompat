@@ -24,7 +24,8 @@ import java.util.Set;
 
 @Mixin(value = TorcherinoBlockEntity.class, remap = false)
 public abstract class MixinTorcherinoBlockEntity extends BlockEntity {
-    @Shadow private int speed;
+    @Shadow
+    private int speed;
 
     @Unique
     private final Set<MultiblockData> torcherinoIntegrations$acceleratedMultiblocks = new HashSet<>();
@@ -38,7 +39,17 @@ public abstract class MixinTorcherinoBlockEntity extends BlockEntity {
         ((MixinTorcherinoBlockEntity) (Object) entity).torcherinoIntegrations$acceleratedMultiblocks.clear();
     }
 
-    @Inject(method = "tickBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/entity/BlockEntity;isRemoved()Z", shift = At.Shift.BEFORE, ordinal = 1), cancellable = true)
+    @Inject(
+            method = "tickBlock",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/block/entity/BlockEntity;isRemoved()Z",
+                    shift = At.Shift.BEFORE,
+                    ordinal = 1
+            ),
+            cancellable = true,
+            remap = true
+    )
     private void tickBlock(
             BlockPos pos,
             CallbackInfo ci,
@@ -46,11 +57,11 @@ public abstract class MixinTorcherinoBlockEntity extends BlockEntity {
             @Local(ordinal = 0) BlockEntity blockEntity,
             @Local(ordinal = 0) BlockEntityTicker<BlockEntity> ticker
     ) {
-        if(!(blockEntity instanceof TileEntityMultiblock<?> multi)) {
+        if (!(blockEntity instanceof TileEntityMultiblock<?> multi)) {
             return;
         }
         var data = multi.getDefaultData();
-        if(data != null && torcherinoIntegrations$acceleratedMultiblocks.contains(data)) {
+        if (data != null && torcherinoIntegrations$acceleratedMultiblocks.contains(data)) {
             return;
         }
         torcherinoIntegrations$acceleratedMultiblocks.add(data);
@@ -59,8 +70,8 @@ public abstract class MixinTorcherinoBlockEntity extends BlockEntity {
         var multiTile = (AccessorTileEntityMultiblock) multi;
 
         multiTile.setIsMaster(true);
-        for(int i = 0; i < this.speed; i++) {
-            if(blockEntity.isRemoved()) {
+        for (int i = 0; i < this.speed; i++) {
+            if (blockEntity.isRemoved()) {
                 break;
             }
             ticker.tick(Objects.requireNonNull(this.level), pos, blockState, blockEntity);
