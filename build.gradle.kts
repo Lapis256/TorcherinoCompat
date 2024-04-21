@@ -171,8 +171,8 @@ tasks {
             "dependencies" to buildDeps(
                 ModDep("forge", forgeMajorVersion),
                 ModDep("minecraft", minecraftVersion),
-                ModDep("mekanism", "10.2"),
-                ModDep("torcherino", "16"),
+                ModDep("mekanism", "10.3"),
+                ModDep("torcherino", "17"),
             ),
         )
 
