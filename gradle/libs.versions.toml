@@ -1,0 +1,34 @@
+[versions]
+plugin_mixin = "0.7.+"
+plugin_forge = "6.0.+"
+plugin_parchmentmc = "1.+"
+
+
+minecraft = "1.19.2"
+minecraftForge = "1.19.2-43.3.0"
+forge = "43.3.0"
+parchmentmc = "2022.11.27"
+mixin = "0.8.5"
+mixinExtras = "0.3.5"
+
+jei = "11.6.0.1019"
+mekanism = "1.19.2-10.3.9.13"
+torcherino = "4061024"
+
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+minecraftForge = { module = "net.minecraftforge:forge", version.ref = "minecraftForge" }
+mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
+mixinExtrasCommon = { module = "io.github.llamalad7:mixinextras-common", version.ref = "mixinExtras" }
+mixinExtrasForge = { module = "io.github.llamalad7:mixinextras-forge", version.ref = "mixinExtras" }
+
+jei = { module = "mezz.jei:jei-1.19.2-forge", version.ref = "jei" }
+mekanism = { module = "mekanism:Mekanism", version.ref = "mekanism" }
+torcherino = { module = "curse.maven:torcherino-236794", version.ref = "torcherino" }
+
+
+[plugins]
+mixin = { id = "org.spongepowered.mixin", version.ref = "plugin_mixin" }
+forge = { id = "net.minecraftforge.gradle", version.ref = "plugin_forge" }
+parchmentmc = { id = "org.parchmentmc.librarian.forgegradle", version.ref = "plugin_parchmentmc" }
