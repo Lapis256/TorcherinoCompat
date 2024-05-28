@@ -37,7 +37,6 @@ minecraft {
 
     runs {
         configureEach {
-            workingDirectory(project.file("run"))
             ideaModule("${rootProject.name}.${project.name}.main")
 
             properties(
@@ -60,11 +59,15 @@ minecraft {
         create("client") {
             taskName("Forge Client")
 
+            workingDirectory(project.file("run"))
+
             property("forge.enabledGameTestNamespaces", modId)
         }
 
         create("server") {
             taskName("Forge Server")
+
+            workingDirectory(project.file("run-server"))
 
             property("forge.enabledGameTestNamespaces", modId)
         }
@@ -108,21 +111,17 @@ repositories {
 dependencies {
     minecraft(libs.minecraftForge)
 
-    libs.mekanism.get().run {
-        compileOnly(fg.deobf("$module:$version"))
-        compileOnly(fg.deobf("$module:$version:api"))
-        compileOnly(fg.deobf("$module:$version:generators"))
+    compileOnly(deobf(libs.mekanism))
+    compileOnly(deobf(variantOf(libs.mekanism, "api")))
+    compileOnly(deobf(variantOf(libs.mekanism, "generators")))
 
-        runtimeOnly(fg.deobf("$module:$version:all"))
-    }
+    runtimeOnly(deobf(variantOf(libs.mekanism, "all")))
 
-    implementation(fg.deobf(libs.torcherino.get()))
+    implementation(deobf(libs.torcherino))
 
-    runtimeOnly(fg.deobf(libs.jei.get()))
+    runtimeOnly(deobf(libs.jei))
 
-    annotationProcessor(variantOf(libs.mixin) {
-        classifier("processor")
-    })
+    annotationProcessor(variantOf(libs.mixin, "processor"))
     libs.mixinExtrasCommon.let {
         annotationProcessor(it)
         compileOnly(it)
@@ -183,10 +182,6 @@ tasks {
     }
 
     jar {
-        from(rootProject.file("LICENSE")) {
-            rename { "LICENSE_${Constants.Mod.id}" }
-        }
-
         manifest {
             attributes(
                 "Specification-Title" to Constants.Mod.name,
@@ -205,32 +200,13 @@ tasks {
         finalizedBy("reobfJar")
     }
 
-    named<Jar>("sourcesJar") {
-        from(rootProject.file("LICENSE")) {
-            rename { "LICENSE_${Constants.Mod.id}" }
+    listOf("jar", "sourcesJar", "jarJar").forEach {
+        named<Jar>(it) {
+            from(rootProject.file("LICENSE")) {
+                rename { "LICENSE_${Constants.Mod.id}" }
+            }
         }
     }
 }
 
-data class ModDep(
-    val id: String,
-    val version: String,
-    val mandatory: Boolean = true,
-    val ordering: String = "NONE",
-    val side: String = "BOTH"
-)
-
-fun buildDeps(
-    vararg deps: ModDep
-): String {
-    return deps.joinToString(separator = "\n") { (id, version, mandatory, ordering, side) ->
-        """
-            [[dependencies.${modId}]]
-            modId = "$id"
-            versionRange = "[$version,)"
-            mandatory = $mandatory
-            ordering = "$ordering"
-            side = "$side"
-        """.trimIndent()
-    }
-}
+fun deobf(dependency: Provider<MinimalExternalModuleDependency>) = fg.deobf(dependency.get())
