@@ -1,14 +1,15 @@
 package io.github.lapis256.torcherino_compat.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import io.github.lapis256.torcherino_compat.utils.MekanismUtils;
 import mekanism.common.lib.multiblock.MultiblockData;
 import mekanism.common.tile.prefab.TileEntityMultiblock;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -28,15 +29,16 @@ public abstract class MixinTorcherinoBlockEntity extends BlockEntity {
     private int speed;
 
     @Unique
-    private final Set<MultiblockData> torcherinoIntegrations$acceleratedMultiblocks = new HashSet<>();
+    @Final
+    private final Set<MultiblockData> torcherinoCompat$acceleratedMultiblocks = new HashSet<>();
 
     public MixinTorcherinoBlockEntity(BlockEntityType<?> pType, BlockPos pPos, BlockState pBlockState) {
         super(pType, pPos, pBlockState);
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
-    private static void tick(Level level, BlockPos pos, BlockState state, TorcherinoBlockEntity entity, CallbackInfo ci) {
-        ((MixinTorcherinoBlockEntity) (Object) entity).torcherinoIntegrations$acceleratedMultiblocks.clear();
+    private static void torcherinoCompat$tick(CallbackInfo ci, @Local(argsOnly = true) TorcherinoBlockEntity entity) {
+        ((MixinTorcherinoBlockEntity) (Object) entity).torcherinoCompat$acceleratedMultiblocks.clear();
     }
 
     @Inject(
@@ -50,7 +52,7 @@ public abstract class MixinTorcherinoBlockEntity extends BlockEntity {
             cancellable = true,
             remap = true
     )
-    private void tickBlock(
+    private void torcherinoCompat$tickBlock(
             BlockPos pos,
             CallbackInfo ci,
             @Local(ordinal = 0) BlockState blockState,
@@ -60,18 +62,25 @@ public abstract class MixinTorcherinoBlockEntity extends BlockEntity {
         if (!(blockEntity instanceof TileEntityMultiblock<?> multi)) {
             return;
         }
-        var data = multi.getDefaultData();
-        if (data != null && torcherinoIntegrations$acceleratedMultiblocks.contains(data)) {
+
+        var data = multi.getMultiblock();
+        if (torcherinoCompat$acceleratedMultiblocks.contains(data) || MekanismUtils.isCancelAcceleration(data)) {
+            ci.cancel();
             return;
         }
-        torcherinoIntegrations$acceleratedMultiblocks.add(data);
+        torcherinoCompat$acceleratedMultiblocks.add(data);
+
+        if (!data.isFormed() || MekanismUtils.isCancelAcceleration(data)) {
+            ci.cancel();
+            return;
+        }
 
         var isMaster = multi.isMaster();
         var multiTile = (AccessorTileEntityMultiblock) multi;
 
         multiTile.setIsMaster(true);
         for (int i = 0; i < this.speed; i++) {
-            if (blockEntity.isRemoved()) {
+            if (blockEntity.isRemoved() || MekanismUtils.isCancelAcceleration(data)) {
                 break;
             }
             ticker.tick(Objects.requireNonNull(this.level), pos, blockState, blockEntity);
