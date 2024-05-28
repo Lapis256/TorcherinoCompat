@@ -21,4 +21,6 @@ build
 # other
 eclipse
 run
+run-server
+run-data
 runs
